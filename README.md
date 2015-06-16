@@ -18,10 +18,20 @@ Then start the django server
   3. In a web brower please visit http://127.0.0.1:8000/classic/rummy/
 
 
-You will be playing as Player-you and you will have first turn. 
-There are two option for a user, Draw a new card or Get the open card.
+I tried to implement the first 2 Challenges
+  1. Game Mechanics
+  2. Goal Detection
 
-Once you draw a card you need to discard a one card.
+It took me 5-6 hours to implement this whole project and currenlty there might be some bugs.
+
+Known Bugs:
+1. There are some issues with how the remainging cards deck is handled and how discard cards should go back into the deck.
+
+
+How to Play:
+  You will be playing as Player-you and you will have first turn. 
+  There are two option for a user, Draw a new card or Get the open card.
+  Once you draw a card you need to discard a one card.
 
 
 Child Rummy is a simple variation of [Rummy](http://en.wikipedia.org/wiki/Rummy):
