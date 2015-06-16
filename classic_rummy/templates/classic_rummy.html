@@ -1,0 +1,195 @@
+<html>
+<head>
+  <title>Classic Rummy</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+	  
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="{{ MEDIA_URL}}custom.css">
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+</head>
+
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="pull-left col-md-8">
+				{% for player, info in game.items %}
+					
+					<div class="row " id="player_{{ player }}" list="{{ info.list }}">
+						<h3>Player- {{ player }}</h3> 
+						
+						{% for cards, item in info.items %}
+							
+							{% for index, i in item.items %}
+								
+								<div class="col-md-1 border" id="index_{{ index }}">
+									<p class="pull-left"> {{ i.card.rank }}</p><br>
+										<img  src="{{ MEDIA_URL}}{{ i.card.suit }}.png"/><br>
+									<p class="pull-right">{{ i.card.rank }}</p>	<br>
+									{% if player == 'you' %}
+										<p><a hred="#" class="btn btn-default discard_button" attr="{{ index }}" >Discard</a></p>
+									{% endif %}
+
+									<br>
+								</div>
+							
+							{% endfor %}	
+							
+						{% endfor %}
+					</div>
+				{% endfor %}
+			</div>
+			<div class="col-md-4 pull-right game_option">
+			
+				<h3><a hred="#" class="btn btn-info" id="draw_card_button"> Draw a New Card</a> <a  class="btn btn-info" id="get_draw_card_button" index="{{ open_card_index }}" rank="{{ open_card.rank }}" suit="{{ open_card.suit }}">Get Card</a></h3>
+				
+				<div class="col-md-2 border" id="open_card">
+					<p class="pull-left">{{ open_card.rank }}</p><br>
+						<img  src="{{ MEDIA_URL}}{{ open_card.suit }}.png"/><br>
+					<p class="pull-right">{{ open_card.rank }}</p>	
+				</div>
+			</div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+  
+  var remaining_deck = {{ remaining_deck_index }};
+
+  $(function() {
+  	
+  	$(".discard_button").hide();  
+
+  	$("#draw_card_button").click( function(){
+   		remaining_deck = draw_card(remaining_deck);
+   	});
+
+   	$("#get_draw_card_button").click( function(){
+   		var card_index = $(this).attr('index');
+   		var rank = $(this).attr('rank');
+   		var suit = $(this).attr('suit');
+   		get_draw_card(card_index, rank, suit);
+   		remaining_deck = draw_card(remaining_deck);
+   	
+    }); 
+
+    $("body").on("click",".discard_button", function(){
+  		
+  		var index = "#index_"+ $(this).attr('attr');
+   		$( index ).remove();
+
+   		var card_list = $("#player_you").attr('list');
+   		
+   		update_player_card_list("#player_you", card_list, $(this).attr('attr'), "remove" );
+   		
+   		$(".discard_button").hide(); 
+
+   		auto_play_player(remaining_deck);
+
+	});
+    
+
+});
+
+function auto_play_player(remaining_deck)
+{
+	$.each([ 1, 2, 3 ], function( index, value ) {
+  		var id = "#player_" + value ;
+  		$(id).attr("style","background-color:#eee");
+  		var current_card_list = $(id).attr('list');
+
+  		var data = {'remaining_deck': remaining_deck, "current_card_list": current_card_list };
+    	
+    	$.ajax({
+	    	url: '/draw/card/',
+	    	type: 'POST',
+	        data: data,
+	        success: function(data) {
+	        	if (data.success)
+	        	{
+	        		if (data.random_discard){
+	        			update_player_card_list(id , $(id).attr('list'), data.new_card_index , "add" );
+	        			
+	        			$( id ).append("<div class='col-md-1 border' id=index_"+ data.new_card_index +"> <p class='pull-left'>" +data.new_card_rank+ "</p><br><img src={{ MEDIA_URL}}"+data.new_card_suit+".png/><br><p class='pull-right'>" +data.new_card_rank+ "</p></div>").delay(500);
+	        			
+	        			var index = "#index_"+ data.random_discard;
+	        			$(index).remove()
+
+	        			update_player_card_list(id , $(id).attr('list'), data.random_discard , "remove" );
+	        			$(id).attr("style","background-color:#fff");
+	        		}
+	        		 	
+		        }
+	        }
+	    });
+	});
+
+}
+function get_draw_card(card_index, rank, suit)
+{
+
+	$( "#player_you" ).append("<div class='col-md-1 border' id=index_"+ card_index +"> <p class='pull-left'>" +rank+ "</p><br><img src={{ MEDIA_URL}}"+suit+".png/><br><p class='pull-right'>" +rank+ "</p><p><a hred='#' class='btn btn-default discard_button' attr="+ card_index +" >Discard</a></p> </div>");
+	
+	var card_list = $("#player_you").attr('list');
+	update_player_card_list("#player_you",card_list, card_index, "add" );
+	$(".discard_button").show();
+}
+
+
+
+function draw_card(remaining_deck)
+{	
+	var data = {'remaining_deck':remaining_deck};
+    
+    $.ajax({
+    	url: '/draw/card/',
+    	type: 'POST',
+        data: data,
+        success: function(data) {
+        	if (data.success)
+        	{
+        		$( "#open_card" ).empty();
+	        	$( "#open_card" ).append("<p class='pull-left'>" + data.new_card_rank + "</p><br>");
+	        	$( "#open_card" ).append("<img src='{{ MEDIA_URL}}" + data.new_card_suit + ".png'/><br>");
+	        	$( "#open_card" ).append("<p class='pull-righ'>" + data.new_card_rank + "</p>");
+	        	
+	        	$("#get_draw_card_button").attr("rank", data.new_card_rank);
+	        	$("#get_draw_card_button").attr("suit", data.new_card_suit);
+	        	$("#get_draw_card_button").attr("index", data.new_card_index); 	
+	        }
+        }
+    });
+
+    return data.remaining_deck 
+}
+
+
+function update_player_card_list(id, card_list, new_card_index, action)
+{
+	var data = {'card_list':card_list, 'new_card_index':new_card_index, 'action':action };
+    
+    $.ajax({
+    	url: '/update/player/card/',
+    	type: 'POST',
+        data: data,
+        success: function(data) {
+        	if (data.success)
+        	{
+        		$(id).attr("list",data.card_list);
+        		if (data.player_won)
+        		{
+        			alert("Congraulations is Classic Rummy!!");
+        		}
+        	}
+
+        }
+    });
+
+}
+
+</script>
+</html>
