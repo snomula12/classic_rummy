@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Coding Challenge - Child Rummy
 
 
@@ -114,3 +115,7 @@ HTML/CSS/JavaScript or iOS.
 Implement the logic for a bot which attempts to win the game. 
 
 
+=======
+# classic_rummy
+This is small game i created using python and jquery
+>>>>>>> 231e50e19b7f7b9abdf378357025aefd11a7b7ef
